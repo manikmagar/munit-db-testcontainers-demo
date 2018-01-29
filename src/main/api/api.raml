@@ -56,37 +56,3 @@ baseUri: http://api.example.com
                   }
           404:
             description: Book Not found
-      /checkout:
-        post:
-          description: Posts a new checkout transaction for this book
-          responses:
-            201:
-              description: Successful creation of transaction
-              headers:
-                X-TransactionId:
-                    description: New Transaction Id
-                    type: number
-  /transactions:
-    get:
-      description: Gets All book transactions
-      responses:
-        200:
-          body:
-            application/json:
-              example: |
-                [
-                  {
-                    "transaction_id": 1,
-                    "book_id": 1,
-                    "checkout_time": 2018-01-27T10:00:00,
-                    "checkin_time": "null"
-                  }
-                ]
-    /{transactiondId}:
-      patch:
-        description: Updates the check-in time for this transaction.
-        responses:
-          204:
-            description: Successful update of this transaction.
-          404:
-            description: Transaction not found
