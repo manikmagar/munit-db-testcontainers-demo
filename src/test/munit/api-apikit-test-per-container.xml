@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:db-testcontainers="http://www.mulesoft.org/schema/mule/db-testcontainers"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:mock="http://www.mulesoft.org/schema/mule/mock"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/db-testcontainers http://www.mulesoft.org/schema/mule/db-testcontainers/current/mule-db-testcontainers.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+http://www.mulesoft.org/schema/mule/mock http://www.mulesoft.org/schema/mule/mock/current/mule-mock.xsd">
+	<spring:beans>
+		<spring:import resource="classpath:common-connectors.xml" />
+		<spring:import resource="classpath:api.xml" />
+	</spring:beans>
+	<munit:config mock-connectors="false" mock-inbounds="false"
+		doc:name="MUnit configuration" />
+	<db-testcontainers:config name="DB_TestContainers__Configuration"
+		password="${db.password}" url="${db.url}" username="${db.user}"
+		doc:name="DB TestContainers: Configuration" />
+	<http:request-config name="HTTP_Request_Configuration"
+		host="localhost" port="8081" basePath="/api" doc:name="HTTP Request Configuration" />
+    <munit:before-test name="api-apikit-test-per-containerBefore_Test" description="Before tests actions">
+        <db-testcontainers:start-db-container config-ref="DB_TestContainers__Configuration" doc:name="DB TestContainers"/>
+    </munit:before-test>
+    <munit:after-test name="api-apikit-test-per-containerAfter_Test" description="After tests actions">
+        <db-testcontainers:stop-db-container config-ref="DB_TestContainers__Configuration" doc:name="DB TestContainers"/>
+    </munit:after-test>
+	<munit:test
+		name="patch:/library/transactions/transactiondId:api-config-204--FlowTest"
+		description="Verifying functionality of [patch:/library/transactions/transactiondId:api-config-204-]">
+		<http:request config-ref="HTTP_Request_Configuration"
+			method="PATCH" path="/library/transactions/{transactiondId}"
+			doc:name="HTTP" />
+		<object-to-string-transformer doc:name="http response to string" />
+		<munit:assert-true message="The HTTP Status code is not correct!"
+			condition="#[messageInboundProperty('http.status').is(eq(204))]"
+			doc:name="assert that - http.status eq 204" />
+	</munit:test>
+	<munit:test
+		name="patch:/library/transactions/transactiondId:api-config-404--FlowTest"
+		description="Verifying functionality of [patch:/library/transactions/transactiondId:api-config-404-]">
+		<http:request config-ref="HTTP_Request_Configuration"
+			method="PATCH" path="/library/transactions/{transactiondId}"
+			doc:name="HTTP">
+            <http:request-builder>
+                <http:uri-param paramName="transactionId" value="1"/>
+            </http:request-builder>
+			<http:success-status-code-validator
+				values="404" />
+		</http:request>
+		<object-to-string-transformer doc:name="http response to string" />
+		<munit:assert-true message="The HTTP Status code is not correct!"
+			condition="#[messageInboundProperty('http.status').is(eq(404))]"
+			doc:name="assert that - http.status eq 404" />
+	</munit:test>
+	<munit:test
+		name="get:/library/books:api-config-200-application/json-FlowTest"
+		description="Verifying functionality of [get:/library/books:api-config-200-application/json]">
+		<http:request config-ref="HTTP_Request_Configuration"
+			method="GET" path="/library/books" doc:name="HTTP">
+			<http:request-builder>
+				<http:header headerName="Accept" value="application/json" />
+			</http:request-builder>
+		</http:request>
+		<object-to-string-transformer doc:name="http response to string" />
+		<munit:assert-true message="The HTTP Status code is not correct!"
+			condition="#[messageInboundProperty('http.status').is(eq(200))]"
+			doc:name="assert that - http.status eq 200" />
+		<munit:assert-on-equals message="The response payload is not correct!"
+			expectedValue="#[getResource('scaffolder/response/get_200_library_books_application_json.json').asString()]"
+			actualValue="#[payload]" doc:name="assert that - payload is as expected" />
+	</munit:test>
+	<munit:test
+		name="get:/library/transactions:api-config-200-application/json-FlowTest"
+		description="Verifying functionality of [get:/library/transactions:api-config-200-application/json]">
+		<db:insert config-ref="MySQL_Configuration" doc:name="Database">
+			<db:parameterized-query><![CDATA[INSERT INTO transactions
+(
+book_id,
+checkout_time,
+checkin_time
+)
+VALUES
+(
+1,
+'2018-01-29T10:00:00',
+null)]]></db:parameterized-query>
+		</db:insert>
+		<http:request config-ref="HTTP_Request_Configuration"
+			method="GET" path="/library/transactions" doc:name="HTTP">
+			<http:request-builder>
+				<http:header headerName="Accept" value="application/json" />
+			</http:request-builder>
+		</http:request>
+		<object-to-string-transformer doc:name="http response to string" />
+		<munit:assert-true message="The HTTP Status code is not correct!"
+			condition="#[messageInboundProperty('http.status').is(eq(200))]"
+			doc:name="assert that - http.status eq 200" />
+		<munit:assert-on-equals message="The response payload is not correct!"
+			expectedValue="#[getResource('scaffolder/response/get_200_library_transactions_application_json.json').asString()]"
+			actualValue="#[payload]" doc:name="assert that - payload is as expected" />
+	</munit:test>
+	<munit:test
+		name="get:/library/books/bookId:api-config-200-application/json-FlowTest"
+		description="Verifying functionality of [get:/library/books/bookId:api-config-200-application/json]">
+		<http:request config-ref="HTTP_Request_Configuration"
+			method="GET" path="/library/books/{bookId}" doc:name="HTTP">
+			<http:request-builder>
+                <http:uri-param paramName="bookId" value="1"/>
+                <http:header headerName="Accept" value="application/json"/>
+			</http:request-builder>
+		</http:request>
+		<object-to-string-transformer doc:name="http response to string" />
+		<munit:assert-true message="The HTTP Status code is not correct!"
+			condition="#[messageInboundProperty('http.status').is(eq(200))]"
+			doc:name="assert that - http.status eq 200" />
+		<munit:assert-on-equals message="The response payload is not correct!"
+			expectedValue="#[getResource('scaffolder/response/get_200_library_books_{bookid}_application_json.json').asString()]"
+			actualValue="#[payload]" doc:name="assert that - payload is as expected" />
+	</munit:test>
+	<munit:test name="get:/library/books/bookId:api-config-204--FlowTest"
+		description="Verifying functionality of [get:/library/books/bookId:api-config-204-]">
+		<http:request config-ref="HTTP_Request_Configuration"
+			method="GET" path="/library/books/{bookId}" doc:name="HTTP" >
+            <http:request-builder>
+                <http:uri-param paramName="bookId" value="100"/>
+            </http:request-builder>
+        </http:request>
+		<object-to-string-transformer doc:name="http response to string" />
+		<munit:assert-true message="The HTTP Status code is not correct!"
+			condition="#[messageInboundProperty('http.status').is(eq(204))]"
+			doc:name="assert that - http.status eq 204" />
+	</munit:test>
+	<munit:test
+		name="post:/library/books:application/json:api-config-201--FlowTest"
+		description="Verifying functionality of [post:/library/books:application/json:api-config-201-]">
+		<set-payload
+			value="#[getResource('scaffolder/request/post_library_books_application_json.json').asString()]"
+			doc:name="Set Payload" />
+		<http:request config-ref="HTTP_Request_Configuration"
+			method="POST" path="/library/books" doc:name="HTTP">
+			<http:request-builder>
+				<http:header headerName="Content-Type" value="application/json" />
+			</http:request-builder>
+		</http:request>
+		<object-to-string-transformer doc:name="http response to string" />
+		<munit:assert-true message="The HTTP Status code is not correct!"
+			condition="#[messageInboundProperty('http.status').is(eq(201))]"
+			doc:name="assert that - http.status eq 201" />
+		<munit:assert-on-equals expectedValue="3"
+			actualValue="#[message.inboundProperties['X-BookId']]" doc:name="Assert new book id" />
+	</munit:test>
+	<munit:test
+		name="post:/library/books/bookId/checkout:api-config-201--FlowTest"
+		description="Verifying functionality of [post:/library/books/bookId/checkout:api-config-201-]">
+		<http:request config-ref="HTTP_Request_Configuration"
+			method="POST" path="/library/books/{bookId}/checkout" doc:name="HTTP">
+			<http:request-builder>
+				<http:uri-param paramName="bookId" value="#[1]" />
+			</http:request-builder>
+		</http:request>
+		<object-to-string-transformer doc:name="http response to string" />
+		<munit:assert-true message="The HTTP Status code is not correct!"
+			condition="#[messageInboundProperty('http.status').is(eq(201))]"
+			doc:name="assert that - http.status eq 201" />
+		<munit:assert-on-equals
+			expectedValue="1"
+			actualValue="#[message.inboundProperties['X-TransactionId']]" doc:name="Assert new Transaction id" />
+	</munit:test>
+</mule>

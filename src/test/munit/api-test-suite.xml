@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db-testcontainers="http://www.mulesoft.org/schema/mule/db-testcontainers" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:core="http://www.mulesoft.org/schema/mule/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db-testcontainers http://www.mulesoft.org/schema/mule/db-testcontainers/current/mule-db-testcontainers.xsd">
+    <munit:config name="munit" doc:name="MUnit configuration"/>
+    <spring:beans>
+    	<spring:import resource="classpath:common-connectors.xml"/>
+        <spring:import resource="classpath:api.xml"/>
+    </spring:beans>
+    <db-testcontainers:config name="DB_TestContainers__Configuration" password="${db.password}" url="${db.url}" username="${db.user}" doc:name="DB TestContainers: Configuration"/>
+    <munit:before-suite name="api-test-suiteBefore_Suite" description="MUnit Test">
+        <db-testcontainers:start-db-container config-ref="DB_TestContainers__Configuration" doc:name="DB TestContainers"/>
+    </munit:before-suite>
+    <munit:after-suite name="api-test-suiteAfter_Suite" description="Ater suite actions">
+        <db-testcontainers:stop-db-container config-ref="DB_TestContainers__Configuration" doc:name="DB TestContainers"/>
+    </munit:after-suite>
+    <munit:test name="api-test-suite-get:/library/books:api-configTest" description="Test">
+        <flow-ref name="get:/library/books:api-config" doc:name="Flow-ref to get:/library/books:api-config"/>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </munit:test>
+</mule>

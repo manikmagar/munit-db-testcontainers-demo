@@ -1,0 +1,20 @@
+[
+  {
+    "total_quantity": 10,
+    "title": "My First Book",
+    "available_quantity": 10,
+    "price": 20,
+    "description": "This is my first book.",
+    "book_id": 1,
+    "create_timestamp": "2018-01-28T05:00:00"
+  },
+  {
+    "total_quantity": 40,
+    "title": "My Second Book",
+    "available_quantity": 40,
+    "price": 30,
+    "description": "This is my second book.",
+    "book_id": 2,
+    "create_timestamp": "2018-01-28T05:05:00"
+  }
+]

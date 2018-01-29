@@ -1,0 +1,92 @@
+#%RAML 1.0
+title: Library Content API
+version: v1
+baseUri: http://api.example.com
+/library:
+  /books:
+    get:
+      description: Get All the books in library
+      responses:
+        200:
+          body:
+            application/json:
+              example: |
+                [
+                  {
+                    "title": "My First Book",
+                    "description": "This is my first book"
+                    "price": 30,
+                    "total_quantity": 10,
+                    "available_quantity": 10
+                  }
+                ]
+    post:
+      description: Adds new book to the library
+      body:
+        application/json:
+          example: |
+            {
+              "title": "My First Book",
+              "description": "This is my first book"
+              "price": 30,
+              "total_quantity": 10,
+              "available_quantity": 10
+            }
+      responses:
+        201:
+          description: Book resource created response.
+          headers:
+               X-BookId:
+                 description: New Book Id
+                 type: number
+    /{bookId}:
+      get:
+        description: Gets single Book details
+        responses:
+          200:
+            body:
+              application/json:
+                example: |
+                  {
+                    "title": "My First Book",
+                    "description": "This is my first book",
+                    "price": 30,
+                    "total_quantity": 10,
+                    "available_quantity": 10
+                  }
+          404:
+            description: Book Not found
+      /checkout:
+        post:
+          description: Posts a new checkout transaction for this book
+          responses:
+            201:
+              description: Successful creation of transaction
+              headers:
+                X-TransactionId:
+                    description: New Transaction Id
+                    type: number
+  /transactions:
+    get:
+      description: Gets All book transactions
+      responses:
+        200:
+          body:
+            application/json:
+              example: |
+                [
+                  {
+                    "transaction_id": 1,
+                    "book_id": 1,
+                    "checkout_time": 2018-01-27T10:00:00,
+                    "checkin_time": "null"
+                  }
+                ]
+    /{transactiondId}:
+      patch:
+        description: Updates the check-in time for this transaction.
+        responses:
+          204:
+            description: Successful update of this transaction.
+          404:
+            description: Transaction not found
