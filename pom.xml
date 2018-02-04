@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.javastreets</groupId>
@@ -11,11 +12,11 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
 		<mule.version>3.9.0</mule.version>
 		<mule.tools.version>1.2</mule.tools.version>
 		<munit.version>1.3.6</munit.version>
 		<mule.munit.support.version>3.9.0</mule.munit.support.version>
+		<tc.connector.version>0.0.2</tc.connector.version>
 	</properties>
 
 	<build>
@@ -179,20 +180,28 @@
 			<version>${munit.version}</version>
 			<scope>test</scope>
 		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>org.testcontainers</groupId> -->
+		<!-- <artifactId>mysql</artifactId> -->
+		<!-- <version>1.6.0</version> -->
+		<!-- </dependency> -->
+
+		<!-- START: Workaround for Procedures: See https://github.com/testcontainers/testcontainers-java/issues/570 -->
 		<dependency>
-			<groupId>com.javastreets</groupId>
-			<artifactId>munit-db-testcontainer-connector</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.testcontainers</groupId>
+			<groupId>com.github.testcontainers.testcontainers-java</groupId>
 			<artifactId>mysql</artifactId>
-			<version>1.5.1</version>
+			<version>experimental-sql-compound-statement-awareness-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>com.github.testcontainers.testcontainers-java</groupId>
+			<artifactId>jdbc</artifactId>
+			<version>experimental-sql-compound-statement-awareness-SNAPSHOT</version>
+		</dependency>
+		<!-- END: Workaround for Procedures: See https://github.com/testcontainers/testcontainers-java/issues/570 -->
 		<dependency>
 			<groupId>com.unittesters</groupId>
 			<artifactId>munit-db-testcontainers-connector</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${tc.connector.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.mulesoft.weave</groupId>
@@ -213,13 +222,19 @@
 			<scope>provided</scope>
 		</dependency>
 
-	<dependency>
-            <groupId>org.mule.modules</groupId>
-            <artifactId>mule-module-validation</artifactId>
-            <version>${mule.version}</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
+		<dependency>
+			<groupId>org.mule.modules</groupId>
+			<artifactId>mule-module-validation</artifactId>
+			<version>${mule.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mule.modules</groupId>
+			<artifactId>mule-module-schedulers</artifactId>
+			<version>${mule.version}</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
 
 	<repositories>
 		<repository>
@@ -233,6 +248,11 @@
 			<name>MuleSoft Releases Repository</name>
 			<url>http://repository.mulesoft.org/releases/</url>
 			<layout>default</layout>
+		</repository>
+
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
 		</repository>
 	</repositories>
 	<pluginRepositories>

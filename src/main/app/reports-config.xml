@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:schedulers="http://www.mulesoft.org/schema/mule/schedulers" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mule/schedulers/current/mule-schedulers.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    <flow name="flow-reports-total-value">
+        <poll doc:name="Poll">
+            <schedulers:cron-scheduler expression="0 0 9 1/1 * ? *"/>
+            <logger message="#['Running Daily Library Value Report']" level="INFO" doc:name="Logger"/>
+        </poll>
+        <db:stored-procedure config-ref="MySQL_Configuration" doc:name="Database">
+            <db:parameterized-query><![CDATA[{call calculate_library_value(:totalValue)}]]></db:parameterized-query>
+            <db:out-param name="totalValue" type="DOUBLE"/>
+        </db:stored-procedure>
+        <set-variable variableName="totalValue" value="#[payload.totalValue]" doc:name="Variable"/>
+        <set-payload value="#[payload.resultSet1]" doc:name="Set Payload"/>
+        <logger message="#['Total Library Value is : '+ flowVars.totalValue]" level="INFO" doc:name="Logger"/>
+    </flow>
+</mule>
